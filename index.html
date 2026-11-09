@@ -445,11 +445,6 @@ function seed(){
     {kind:'event',data:{title:'29CM 이구위크',start:'2026-11-09',end:'2026-11-19',color:'#111111',memo:'11/9 19시 오픈, 쿠폰 사용 11/19 23:59까지 (공식 페이지 확인)'}},
     {kind:'event',data:{title:'W컨셉 더블유위크',start:'2026-11-09',end:'2026-11-20',color:'#5C5C5C',memo:'진행 중 확인. 종료일은 예상'}},
     {kind:'event',data:{title:'무신사 무진장 블프 (예상)',start:'2026-11-15',end:'2026-11-25',color:'#9A9A9A',memo:'공식 발표 전, 기사 기준 예상'}},
-    post({title:'올 여름 자꾸 생각나는 그릇',category:'리빙',date:'2026-06-04',covers:['올 여름,\n자꾸 생각나는 그릇이 생겼다.','',''],intro:'식탁 위에 올려두고 싶은 그릇들을 모아봤어요 .ᐟ\n예쁜 그릇 하나가 밥상 분위기를 이렇게 바꿀 수 있다니 . .',
-      products:[P('나이트프루티','nightfruiti','BRUSH CHAOS DISH','',70000),P('소로이샵','soroishop','카네수즈 모유라 플레이트','',17900),P('munii','munii.official','PLATE.ORCHID','',42000),P('소소유이','shop.sosoyoolee','RAIN DROP PLATE','',12000),P('studihome','studihome__','OAT HALF MOON PLATE','',24000),P('취급주의','an.ti.fragile','SUMMERDOUGH OVAL BOWL','',45000),P('취급주의','an.ti.fragile','STARZZZ OVAL PLATE','',39000)],
-      metrics:M(123,403,6,5,2,0,6,0),link:'https://www.instagram.com/moi.collects/p/DZKJELVk7IL/'}),
-    post({title:'여름을 기다리게 하는 샌들들',category:'잡화',date:'2026-06-16',covers:['여름을\n기다리게 하는 샌들들','',''],intro:'단순한 쪼리부터 반짝이는 젤리 슈즈\n선명한 색감의 플랫까지',metrics:M(329,3895,7,5,2,0,5,0),link:'https://www.instagram.com/moi.collects/p/DZoz6kjk9pe/'}),
-    post({title:'보기만 해도 기분 좋아지는 키치한 소품',category:'소품',date:'2026-06-17',covers:['보기만 해도\n기분 좋아지는 키치한 소품','',''],intro:'꼭 필요해서 샀다기보다는\n귀여워서 재밌어서 자꾸 눈에 밟혀서',metrics:M(136,418,4,9,2,2,13,0),link:'https://www.instagram.com/moi.collects/p/DZsIeXnEy41/'}),
     post({title:'올 겨울은 와인빛',category:'의류',date:'2026-11-08',time:'21:56',covers:['블랙, 브라운 말고 올 겨울은 와인빛','',''],intro:'쌀쌀해지는 겨울에 어두운 무채색 보다 와인빛으로 한 방울 물들인\n플럼, 버건디, 와인색 의류와 가방하나 장만해보아요 -!',
       products:[P('샌드뮤지엄','','CACTUS HOBO BAG','BURGUNDY',155000),P('ROLAROLA','rolarola.official','LACE V NECK KNIT','BURGUNDY',109000),P('The Barnet','thebarnnet','CANVAS BAREN TOTE BAG','BURGUNDY',71000),P('아유서울','areyou_seoul','WOOL BLEND V-NECK KNIT','WINE',139000),P('A LOT','alot_seoul','CMAILLA FLOWER SKIRT','WINE',98000),P('SIYAZU','siyazu_official','울 블렌드 루즈 브이넥 니트','WINE',117000),P('MICHIKO LONDON','michiko_london_kr','FOLDED WAIST SWEAT PANTS','BURGUNDY',95000)],
       metrics:M(250,340,3,3,2,1,1,0),memo:'성과는 11/9 오후 기준 (업로드 16시간 뒤)',link:'https://www.instagram.com/moi.collects/p/DfezoHnE5VX/'}),
@@ -868,6 +863,12 @@ async function cleanup(){
   for(const e of drop)await del(e.id);
   await put('settings',Object.assign(settings(),{cleanup1:true}),SETTINGS_ID);
 }
+async function cleanup2(){
+  const st=settings();if(st.cleanup2)return;
+  const drop=all('post').filter(p=>['올 여름 자꾸 생각나는 그릇','여름을 기다리게 하는 샌들들','보기만 해도 기분 좋아지는 키치한 소품'].includes(p.data.title));
+  for(const p of drop)await del(p.id);
+  await put('settings',Object.assign(settings(),{cleanup2:true}),SETTINGS_ID);
+}
 function boot(){
   $('#login').hidden=true;$('#app').hidden=false;
   $('#modeBadge').textContent=S.mode==='supa'?'동기화 중':'이 브라우저에 저장 중';
@@ -876,16 +877,16 @@ function boot(){
 $('#loginForm').addEventListener('submit',async e=>{e.preventDefault();$('#lErr').textContent='';
   const{error}=await S.client.auth.signInWithPassword({email:$('#lEmail').value.trim(),password:$('#lPw').value});
   if(error){$('#lErr').textContent='이메일이나 비밀번호를 다시 확인해 주세요';return}
-  await loadSupa();await cleanup();boot()});
+  await loadSupa();await cleanup();await cleanup2();boot()});
 (async()=>{
   if(SUPABASE_URL&&SUPABASE_ANON_KEY&&window.supabase){
     S.mode='supa';S.client=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
     const{data:{session}}=await S.client.auth.getSession();
     if(!session){$('#login').hidden=false;return}
-    await loadSupa();await cleanup();boot();
+    await loadSupa();await cleanup();await cleanup2();boot();
   }else{
     if(!loadLocal())await putMany(seed());
-    await cleanup();boot();
+    await cleanup();await cleanup2();boot();
   }
 })();
 </script>

@@ -21,8 +21,9 @@ Branding Planner(moineauseoul/branding-planner)와 구조를 비슷하게 맞추
 - 스크립트 맨 위 `SUPABASE_URL`, `SUPABASE_ANON_KEY`가 비어 있으면 **브라우저 저장 모드**(localStorage `moi-planner-v1`).
 - 채워져 있으면 **Supabase 모드**: 이메일/비밀번호 로그인 → `moi_items` 테이블 읽기/쓰기, Realtime으로 기기 간 실시간 동기화.
 - 테이블 하나(`moi_items`)에 `kind` + `data(jsonb)`로 모든 항목을 넣는다. RLS로 본인(owner)만 읽고 쓸 수 있다.
-- 테이블이 비어 있으면 처음 한 번 기본 데이터(11월 블프 일정: 29CM·W컨셉·무신사, 기존 게시물 4개와 성과, MICHIKO LONDON 반응, 릴스 아이디어 3개)를 넣는다.
+- 테이블이 비어 있으면 처음 한 번 기본 데이터(11월 블프 일정: 29CM·W컨셉·무신사, 11/8 와인빛 게시물과 성과, MICHIKO LONDON 반응, 릴스 아이디어 3개)를 넣는다.
 - 에이블리·지그재그 블프 일정은 수진 요청으로 뺐다. `cleanup()`이 이미 들어간 두 일정을 한 번만 지우고 settings에 `cleanup1:true`를 남긴다.
+- 6월에 올린 게시물 3개(그릇·샌들·키치 소품)는 수진 요청으로 뺐다. `cleanup2()`가 이미 들어간 세 포스트를 제목 기준으로 한 번만 지우고 settings에 `cleanup2:true`를 남긴다.
 - 설정 → 내보내기/가져오기(JSON)로 백업, 브라우저 저장 모드 → Supabase 이전도 가져오기로 한다.
 
 ### kind별 data
