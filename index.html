@@ -845,6 +845,18 @@ $('#setBtn').onclick=()=>{
   if(S.mode==='supa')$('#sOut',sc).onclick=async()=>{await S.client.auth.signOut();location.reload()};
 };
 
+/* ===== 자동화용 API: 예약 작업이 내장 브라우저에서 호출한다 (화면에는 영향 없음) ===== */
+window.moiAPI={
+  version:1,
+  status:()=>({mode:S.mode,loggedIn:S.mode==='local'||!$('#app').hidden,count:items.size,today:todayS()}),
+  list:k=>clone(k?all(k):[...items.values()]),
+  get:id=>clone(items.get(id)||null),
+  add:async(kind,data)=>clone(await put(kind,data)),
+  update:async(id,patch)=>{const it=items.get(id);if(!it)throw new Error('없는 항목: '+id);return clone(await put(it.kind,Object.assign(clone(it.data),patch),id))},
+  remove:async id=>{if(!items.has(id))throw new Error('없는 항목: '+id);await del(id);return true},
+  settings:()=>clone(settings())
+};
+
 /* ===== 시작 ===== */
 $('#studioLink').href=STUDIO_URL;
 async function loadSupa(){

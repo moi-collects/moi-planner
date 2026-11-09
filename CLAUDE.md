@@ -46,6 +46,27 @@ Branding Planner(moineauseoul/branding-planner)와 구조를 비슷하게 맞추
 
 공통: 상단 전체 검색, 캐러셀 스튜디오 바로가기(https://moi-collects.github.io/carousel-studio/), 설정(서명, 주간 목표, 백업, 로그아웃).
 
+## 자동화 (예약 작업)
+
+예약 작업은 수진 컴퓨터의 Claude 데스크톱 앱 내장 브라우저로 플래너(https://moi-collects.github.io/moi-planner/, 로그인 유지됨)를 열고, 페이지의 `window.moiAPI`로 데이터를 읽고 쓴다. 화면 클릭으로 입력하지 않는다.
+
+- `moiAPI.status()` → {mode, loggedIn, count, today}. loggedIn이 false면 로그인 풀림 → 수진에게 알리고 멈춘다.
+- `moiAPI.list(kind)`, `get(id)`, `add(kind,data)`, `update(id,patch)`(data에 얕게 합침), `remove(id)`, `settings()`
+- **moiAPI는 지우거나 이름을 바꾸지 않는다.** 예약 작업이 이걸로 동작한다.
+
+자동화가 쓰는 추가 필드 (화면에는 안 보임)
+- post: `metricsAt`(성과 읽은 시각 ISO), `metricsStage`(1=1일차, 2=3일차), `auto`(인스타에서 찾아 자동 생성한 포스트면 true)
+- idea: `source:'morning'`, `themeDate`(아침 테마 날짜) — 같은 날짜 테마는 한 번만 넣는다
+- event: `auto:true`(행사 일정 갱신 작업이 넣은 것)
+- memo: 주간 리포트는 `report:'YYYY-MM-DD'`(그 주 일요일)
+- brand: 반응은 `reactions` 플래그 + memo 끝에 "M/D 반응 내용" 한 줄 추가
+
+예약 작업 목록
+- moi.collects 평일 테마 / 일요일 테마: 아침 테마 메시지 + Google Drive에 `moi-theme-inbox YYYY-MM-DD` 텍스트 파일 저장. "후보 찾아줘" 결과는 찜한 제품에도 저장.
+- moi.collects 인스타 체크 (매일 밤): 올린 게시물 ↔ 플래너 포스트 연결, 성과 1일차·3일차, 브랜드 반응, Drive 테마 → 아이디어
+- moi.collects 주간 리포트 (일요일 오후): 리포트 메모 + 다음 주 업로드 계획(status idea 포스트)
+- moi.collects 행사 일정 갱신 (월요일 오전): 플랫폼 세일 일정 추가·수정
+
 ## 형식 규칙
 
 - 스튜디오 붙여넣기: `브랜드 | 계정 | 제품명 | 가격 | 컬러` (가격은 숫자만, 정가 기준)
