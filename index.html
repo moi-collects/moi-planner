@@ -102,6 +102,15 @@ main{max-width:1440px;margin:0 auto;padding:24px max(24px,env(safe-area-inset-ri
 .cchip.plan{border-style:dashed;color:var(--fg2)}
 .cchip b{font-weight:700;margin-right:4px}
 
+.toggles{display:flex;gap:6px;margin-left:8px}
+.tg{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:6px 12px 6px 6px;font-size:13px;color:var(--muted);border-color:var(--line2)}
+.tg i{position:relative;width:28px;height:16px;border-radius:8px;background:var(--line2);transition:background .15s}
+.tg i::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:6px;background:#fff;transition:transform .15s}
+.tg[aria-pressed="true"]{color:var(--fg);border-color:var(--fg)}
+.tg[aria-pressed="true"] i{background:var(--fg)}
+.tg[aria-pressed="true"] i::after{transform:translateX(12px)}
+@media (prefers-reduced-motion:reduce){.tg i,.tg i::after{transition:none}}
+
 /* board */
 .board{display:grid;grid-template-columns:repeat(4,minmax(240px,1fr));gap:14px;align-items:start;overflow-x:auto;padding-bottom:6px}
 .col{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;min-height:200px;display:flex;flex-direction:column;gap:8px}
@@ -280,6 +289,10 @@ table.t td.wrap{white-space:normal;min-width:180px;color:var(--fg2)}
           <button type="button" id="calToday">오늘</button>
           <button type="button" id="calNext" aria-label="다음 달">›</button>
         </div>
+        <div class="toggles" role="group" aria-label="캘린더에 표시할 항목">
+          <button type="button" class="tg" data-show="posts" aria-pressed="true"><i></i>포스트</button>
+          <button type="button" class="tg" data-show="events" aria-pressed="true"><i></i>행사 일정</button>
+        </div>
         <div class="sp"></div>
         <button type="button" id="addEvent">일정 추가</button>
         <button type="button" class="primary" id="addPostCal">포스트 추가</button>
@@ -432,8 +445,6 @@ function seed(){
     {kind:'event',data:{title:'29CM 이구위크',start:'2026-11-09',end:'2026-11-19',color:'#111111',memo:'11/9 19시 오픈, 쿠폰 사용 11/19 23:59까지 (공식 페이지 확인)'}},
     {kind:'event',data:{title:'W컨셉 더블유위크',start:'2026-11-09',end:'2026-11-20',color:'#5C5C5C',memo:'진행 중 확인. 종료일은 예상'}},
     {kind:'event',data:{title:'무신사 무진장 블프 (예상)',start:'2026-11-15',end:'2026-11-25',color:'#9A9A9A',memo:'공식 발표 전, 기사 기준 예상'}},
-    {kind:'event',data:{title:'에이블리 블프 (예상)',start:'2026-11-17',end:'2026-12-03',color:'#C9C9C9',memo:'공식 발표 전'}},
-    {kind:'event',data:{title:'지그재그 블프 (예상)',start:'2026-11-17',end:'2026-12-01',color:'#E2E2E2',memo:'공식 발표 전'}},
     post({title:'올 여름 자꾸 생각나는 그릇',category:'리빙',date:'2026-06-04',covers:['올 여름,\n자꾸 생각나는 그릇이 생겼다.','',''],intro:'식탁 위에 올려두고 싶은 그릇들을 모아봤어요 .ᐟ\n예쁜 그릇 하나가 밥상 분위기를 이렇게 바꿀 수 있다니 . .',
       products:[P('나이트프루티','nightfruiti','BRUSH CHAOS DISH','',70000),P('소로이샵','soroishop','카네수즈 모유라 플레이트','',17900),P('munii','munii.official','PLATE.ORCHID','',42000),P('소소유이','shop.sosoyoolee','RAIN DROP PLATE','',12000),P('studihome','studihome__','OAT HALF MOON PLATE','',24000),P('취급주의','an.ti.fragile','SUMMERDOUGH OVAL BOWL','',45000),P('취급주의','an.ti.fragile','STARZZZ OVAL PLATE','',39000)],
       metrics:M(123,403,6,5,2,0,6,0),link:'https://www.instagram.com/moi.collects/p/DZKJELVk7IL/'}),
@@ -465,6 +476,11 @@ function renderActive(force){
 document.addEventListener('focusout',()=>setTimeout(()=>{if(pendingRender){pendingRender=false;renderActive()}},0));
 
 /* ===== 캘린더 ===== */
+let calShow={posts:true,events:true};
+try{Object.assign(calShow,JSON.parse(localStorage.getItem('moi-planner-calshow')||'{}'))}catch(e){}
+function syncToggles(){$$('.tg').forEach(b=>b.setAttribute('aria-pressed',String(!!calShow[b.dataset.show])))}
+$$('.tg').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.show;calShow[k]=!calShow[k];try{localStorage.setItem('moi-planner-calshow',JSON.stringify(calShow))}catch(e){}syncToggles();renderCalendar()}));
+syncToggles();
 let calMonth=(()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1)})();
 $('#calPrev').onclick=()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()-1,1);renderCalendar()};
 $('#calNext').onclick=()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()+1,1);renderCalendar()};
@@ -487,7 +503,7 @@ function renderCalendar(){
   $('#calTitle').textContent=`${y}년 ${m+1}월`;
   const first=new Date(y,m,1),last=new Date(y,m+1,0);
   const start=new Date(y,m,1-first.getDay()),end=new Date(y,m,last.getDate()+(6-last.getDay()));
-  const events=all('event'),posts=all('post').filter(p=>p.data.date),today=todayS();
+  const events=calShow.events?all('event'):[],posts=calShow.posts?all('post').filter(p=>p.data.date):[],today=todayS();
   const grid=$('#calGrid');grid.innerHTML='';
   for(let ws=new Date(start);ws<=end;ws=new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+7)){
     const days=Array.from({length:7},(_,i)=>new Date(ws.getFullYear(),ws.getMonth(),ws.getDate()+i));
@@ -846,6 +862,12 @@ async function loadSupa(){
   S.client.channel('moi-items').on('postgres_changes',{event:'*',schema:'public',table:'moi_items'},p=>{
     if(p.eventType==='DELETE'){items.delete(p.old.id)}else{items.set(p.new.id,p.new)}renderActive()}).subscribe();
 }
+async function cleanup(){
+  const st=settings();if(st.cleanup1)return;
+  const drop=all('event').filter(e=>['에이블리 블프 (예상)','지그재그 블프 (예상)'].includes(e.data.title));
+  for(const e of drop)await del(e.id);
+  await put('settings',Object.assign(settings(),{cleanup1:true}),SETTINGS_ID);
+}
 function boot(){
   $('#login').hidden=true;$('#app').hidden=false;
   $('#modeBadge').textContent=S.mode==='supa'?'동기화 중':'이 브라우저에 저장 중';
@@ -854,16 +876,16 @@ function boot(){
 $('#loginForm').addEventListener('submit',async e=>{e.preventDefault();$('#lErr').textContent='';
   const{error}=await S.client.auth.signInWithPassword({email:$('#lEmail').value.trim(),password:$('#lPw').value});
   if(error){$('#lErr').textContent='이메일이나 비밀번호를 다시 확인해 주세요';return}
-  await loadSupa();boot()});
+  await loadSupa();await cleanup();boot()});
 (async()=>{
   if(SUPABASE_URL&&SUPABASE_ANON_KEY&&window.supabase){
     S.mode='supa';S.client=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
     const{data:{session}}=await S.client.auth.getSession();
     if(!session){$('#login').hidden=false;return}
-    await loadSupa();boot();
+    await loadSupa();await cleanup();boot();
   }else{
     if(!loadLocal())await putMany(seed());
-    boot();
+    await cleanup();boot();
   }
 })();
 </script>
